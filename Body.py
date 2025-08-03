@@ -150,10 +150,10 @@ del data[0]
 for i in range(len(data)):
     if data[i][1] == 'P':
         alerted.append(personP(data[i][2], data[i][3], data[i][4], data[i][5], []))
-        people.extend(alerted[-1])
+        people.append(alerted[-1])
     elif data[i][1] == 'T':
         alerted.append(personT(data[i][2], data[i][3], data[i][4],data[i][5], []))
-        people.extend(alerted[-1])
+        people.append(alerted[-1])
     elif data[i][1] == 'R':
         people.append(person(data[i][2], data[i][3]))
 
