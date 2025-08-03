@@ -42,6 +42,7 @@ f=open("/home/pi/Documents/3D/Lizard/links.txt","r")
 links=f.read()
 f.close()
 links=links.split('\n')
+links.insert(0,'')
 
 while True:
     #check to see if device got banned and reboot
@@ -70,11 +71,17 @@ while True:
         push_send('', 'Server reboot',last['sender_email'])
         os.system("sudo reboot")
     elif 'download' in last['body'].lower():  # Download new version of lizard
-        downloadUrl=links[int(last['body'].split(' ')[1])]
-        response=requests.get(downloadUrl)
-        if int(last['body'].split(' ')[1]) == 1:
-            open('/home/pi/Documents/3D/Lizard/LizardBodyV9.py','wb').write(response.content)
-        elif int(last['body'].split(' ')[1]) == 2:
-            open('/home/pi/Documents/3D/Lizard/LizardHeadV2.py','wb').write(response.content)
-        push_send('', 'New version ready',last['sender_email'])
+        try:
+            downloadUrl=links[int(last['body'].split(' ')[1])]
+            response=requests.get(downloadUrl)
+            if int(last['body'].split(' ')[1]) == 1:
+                open('/home/pi/Documents/3D/Lizard/LizardBodyV9.py','wb').write(response.content)
+                push_send('', 'New Detector version ready',last['sender_email'])
+            elif int(last['body'].split(' ')[1]) == 2:
+                open('/home/pi/Documents/3D/Lizard/LizardHeadV2.py','wb').write(response.content)
+                push_send('', 'New Admin version ready',last['sender_email'])
+            else:
+                push_send('', 'No download',last['sender_email'])
+        except:
+            push_send('', 'Error', last['sender_email'])
     time.sleep(60)
