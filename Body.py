@@ -1,5 +1,7 @@
 # Lizard Body V9
 # changelog
+# update 8-4-25
+# changed csv load to be a function and pushbullet callable
 # update 8-3-25
 # obfuscation
 # Moved to GitHub
@@ -101,6 +103,40 @@ def push_send(subject, message, email):  # send pushbullet notification
         pass
 
 
+def data_update():
+    global alerted, people
+    alerted = []
+    people = []
+    # pull switchboards from file and apply to alerted
+    f = open('/home/pi/Documents/3D/Lizard/data.csv', 'r')
+    csvFile = csv.reader(f)
+    data = []
+    for lines in csvFile:
+        data.append(lines)
+    f.close()
+    del data[0]
+
+    for i in range(len(data)):
+        if data[i][1] == 'P':
+            alerted.append(personP(data[i][2], data[i][3], data[i][4], data[i][5], []))
+            people.append(alerted[-1])
+        elif data[i][1] == 'T':
+            alerted.append(personT(data[i][2], data[i][3], data[i][4], data[i][5], []))
+            people.append(alerted[-1])
+        elif data[i][1] == 'R':
+            people.append(person(data[i][2], data[i][3]))
+
+    switchboards = []
+    for i in range(len(alerted)):  # convert to int
+        switchboards.append([])
+        for k in range(6, 6 + len(people)):
+            switchboards[i].append(int(data[i][k]))
+
+    for i in range(len(alerted)):  # apply to alerted
+        alerted[i].sw = switchboards[i]
+
+
+
 class person:  # Person class
     def __init__(self, listedname, name):
         self.l = listedname
@@ -137,34 +173,7 @@ class personT(personA):  # text person class
 
 alerted = []
 people = []
-
-# pull switchboards from file and apply to alerted
-f = open('/home/pi/Documents/3D/Lizard/data.csv', 'r')
-csvFile = csv.reader(f)
-data = []
-for lines in csvFile:
-    data.append(lines)
-f.close()
-del data[0]
-
-for i in range(len(data)):
-    if data[i][1] == 'P':
-        alerted.append(personP(data[i][2], data[i][3], data[i][4], data[i][5], []))
-        people.append(alerted[-1])
-    elif data[i][1] == 'T':
-        alerted.append(personT(data[i][2], data[i][3], data[i][4],data[i][5], []))
-        people.append(alerted[-1])
-    elif data[i][1] == 'R':
-        people.append(person(data[i][2], data[i][3]))
-
-switchboards = []
-for i in range(len(alerted)):  # convert to int
-    switchboards.append([])
-    for k in range(6, 6+len(people)):
-        switchboards[i].append(int(data[i][k]))
-
-for i in range(len(alerted)):  # apply to alerted
-    alerted[i].sw = switchboards[i]
+data_update()
 
 # load current pushes
 current_file = "/home/pi/Documents/3D/Lizard/push_" + str(time.localtime()[1]) + ".txt"
@@ -256,6 +265,13 @@ while True:
 
     elif last['body'].lower() == 'roster':  # list of all people request___________________
         push_send('', '\n'.join(roster), last['sender_email'])
+
+    elif last['body'].lower() == 'reload':  # list of all people request___________________
+        try:
+            data_update()
+            push_send('', 'Data updated',last['sender_email'])
+        except:
+            push_send('', 'Data error', last['sender_email'])
 
     # send messages out
     for i in range(len(alerted)):

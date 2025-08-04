@@ -1,5 +1,7 @@
 #Admin V2
 #changelog
+# 8-4-25
+# Added download and decrypt of csv data
 # 8-3-25
 # obfuscation
 # added to GitHub
@@ -7,6 +9,8 @@
 #1: All administration function has been moved to this program to prevent locks
 import time, socket, os, requests
 from pushbullet import Pushbullet
+# for decrypting data
+from cryptography.fernet import Fernet
 time.sleep(90)
 # wait on boot to get internet connection established and config changes
 #check to see if ip address is valid
@@ -34,9 +38,13 @@ def push_send(subject,message,email):  # send pushbullet notification
         pass
 
 f=open("/home/pi/Documents/3D/Lizard/LizardGills.txt","r")
-key=f.read()
+pbkey=f.read()
 f.close()
-pb=Pushbullet(key)
+pb=Pushbullet(pbkey)
+
+f = open('key.txt', 'rb')
+key = f.read()
+f.close()
 
 f=open("/home/pi/Documents/3D/Lizard/links.txt","r")
 links=f.read()
@@ -70,7 +78,7 @@ while True:
     elif last['body'].lower()=='reboot':  # reboot request_______________________
         push_send('', 'Server reboot',last['sender_email'])
         os.system("sudo reboot")
-    elif 'download' in last['body'].lower():  # Download new version of lizard
+    elif 'download' in last['body'].lower():  # Download new files
         try:
             downloadUrl=links[int(last['body'].split(' ')[1])]
             response=requests.get(downloadUrl)
@@ -80,6 +88,24 @@ while True:
             elif int(last['body'].split(' ')[1]) == 2:
                 open('/home/pi/Documents/3D/Lizard/LizardHeadV2.py','wb').write(response.content)
                 push_send('', 'New Admin version ready',last['sender_email'])
+            elif int(last['body'].split(' ')[1]) == 3: # retrieve new data.csv and decrypt
+                open('/home/pi/Documents/3D/Lizard/data.txt','wb').write(response.content)
+
+                # retrieve encrypted data
+                f = open('data.txt', 'rb')
+                encFile = f.read()
+                f.close()
+
+                # decrypt data
+                fernet = Fernet(key)
+                decData = fernet.decrypt(encFile).decode()
+
+                # output decrypted data for further use/verification
+                f = open('data.csv', 'w')
+                f.write(decData)
+                f.close()
+
+                push_send('', 'New data.csv ready',last['sender_email'])
             else:
                 push_send('', 'No download',last['sender_email'])
         except:
