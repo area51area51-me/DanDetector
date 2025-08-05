@@ -42,7 +42,7 @@ pbkey=f.read()
 f.close()
 pb=Pushbullet(pbkey)
 
-f = open('key.txt', 'rb')
+f = open('/home/pi/Documents/3D/Lizard/key.txt', 'rb')
 key = f.read()
 f.close()
 
@@ -92,7 +92,7 @@ while True:
                 open('/home/pi/Documents/3D/Lizard/data.txt','wb').write(response.content)
 
                 # retrieve encrypted data
-                f = open('data.txt', 'rb')
+                f = open('/home/pi/Documents/3D/Lizard/data.txt', 'rb')
                 encFile = f.read()
                 f.close()
 
@@ -101,7 +101,7 @@ while True:
                 decData = fernet.decrypt(encFile).decode()
 
                 # output decrypted data for further use/verification
-                f = open('data.csv', 'w')
+                f = open('/home/pi/Documents/3D/Lizard/data.csv', 'w')
                 f.write(decData)
                 f.close()
 
